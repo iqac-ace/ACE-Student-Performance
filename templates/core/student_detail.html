@@ -1,0 +1,445 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+
+    <div>
+        <h2>{{ s.name }}</h2>
+
+        <div class="text-muted">
+            {{ s.register_number }}
+            • {{ s.department.name }}
+            • {{ s.batch }}
+        </div>
+
+        <div class="mt-3">
+
+            {% if user.is_superuser or user.profile.role == 'IQAC' or user.profile.role == 'HOD' %}
+            <a href="{% url 'student_edit' s.id %}"
+               class="btn btn-primary">
+                Edit Student Details
+            </a>
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <div class="text-end">
+
+        <div class="small text-muted">
+            Student Performance Index
+        </div>
+
+        <div class="display-6 fw-bold">
+            {{ spi }}/1000
+        </div>
+
+        <span class="badge bg-primary">
+            {{ level }}
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- BASIC PERFORMANCE CARDS -->
+
+<div class="row g-3 mt-2">
+
+    <div class="col-md-3">
+
+        <div class="card p-3">
+
+            <small>
+                12th Percentage
+            </small>
+
+            <b>
+                {{ s.class12_percentage|default:"-" }}%
+            </b>
+
+        </div>
+
+    </div>
+
+
+    {% for k,v in scores.items %}
+
+    <div class="col-md-3">
+
+        <div class="card p-3">
+
+            <small>
+                Category {{ k }}
+            </small>
+
+            <b>
+                {{ v }}
+            </b>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+
+<!-- SEMESTER GRAPH AND RESULTS -->
+
+<div class="row g-3 mt-1">
+
+
+    <div class="col-lg-6">
+
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <h5>
+                    Semester Performance Trend
+                </h5>
+
+                <canvas id="trend"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="col-lg-6">
+
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <h5>
+                    Semester Results
+                </h5>
+
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>Semester</th>
+                            <th>SGPA</th>
+                            <th>CGPA</th>
+                            <th>Arrears</th>
+                            <th>Status</th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for r in semesters %}
+
+                        <tr>
+
+                            <td>
+                                {{ r.semester }}
+                            </td>
+
+                            <td>
+                                {{ r.sgpa }}
+                            </td>
+
+                            <td>
+                                {{ r.cgpa }}
+                            </td>
+
+                            <td>
+                                {{ r.arrears }}
+                            </td>
+
+                            <td>
+                                {{ r.get_status_display }}
+                            </td>
+
+                        </tr>
+
+
+                        {% empty %}
+
+
+                        <tr>
+
+                            <td colspan="5">
+                                No semester results available.
+                            </td>
+
+                        </tr>
+
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- SUBJECT MARKS -->
+
+<div class="card border-0 shadow-sm mt-3">
+
+    <div class="card-body">
+
+        <h5>
+            Subject Marks
+        </h5>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-sm">
+
+                <thead>
+
+                <tr>
+
+                    <th>Semester</th>
+                    <th>Subject</th>
+                    <th>Internal</th>
+                    <th>External</th>
+                    <th>Total</th>
+                    <th>Approval</th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for m in marks %}
+
+                <tr>
+
+                    <td>
+                        {{ m.subject.semester }}
+                    </td>
+
+                    <td>
+                        {{ m.subject.code }}
+                        -
+                        {{ m.subject.name }}
+                    </td>
+
+                    <td>
+                        {{ m.internal }}
+                    </td>
+
+                    <td>
+                        {{ m.external }}
+                    </td>
+
+                    <td>
+                        {{ m.total }}
+                    </td>
+
+                    <td>
+                        {{ m.get_status_display }}
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+
+                <tr>
+
+                    <td colspan="6">
+                        No marks uploaded.
+                    </td>
+
+                </tr>
+
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ACTIVITIES -->
+
+<div class="card border-0 shadow-sm mt-3">
+
+    <div class="card-body">
+
+        <h5>
+            Co-Curricular / Cultural / Technical / Holistic Record
+        </h5>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-sm">
+
+                <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Framework Area</th>
+                    <th>Activity</th>
+                    <th>Points</th>
+                    <th>Status</th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for a in activities %}
+
+                <tr>
+
+                    <td>
+                        {{ a.activity_date }}
+                    </td>
+
+                    <td>
+                        {{ a.parameter.category_code }}
+                        •
+                        {{ a.parameter.name }}
+                    </td>
+
+                    <td>
+                        {{ a.title }}
+                    </td>
+
+                    <td>
+                        {{ a.points }}
+                    </td>
+
+                    <td>
+                        {{ a.get_status_display }}
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+
+                <tr>
+
+                    <td colspan="5">
+                        No activity records.
+                    </td>
+
+                </tr>
+
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{{ trend|json_script:"trend-data" }}
+
+<script>
+
+const t = JSON.parse(
+    document.getElementById('trend-data').textContent
+);
+
+new Chart(
+    document.getElementById('trend'),
+    {
+        type: 'line',
+
+        data: {
+
+            labels: t.map(
+                x => 'Sem ' + x.semester
+            ),
+
+            datasets: [
+
+                {
+                    label: 'SGPA',
+                    data: t.map(
+                        x => x.sgpa
+                    )
+                },
+
+                {
+                    label: 'CGPA',
+                    data: t.map(
+                        x => x.cgpa
+                    )
+                }
+
+            ]
+
+        },
+
+        options: {
+
+            scales: {
+
+                y: {
+
+                    min: 0,
+                    max: 10
+
+                }
+
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+
+{% endblock %}
